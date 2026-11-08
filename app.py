@@ -50,12 +50,14 @@ from trainer import (
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "animal_uploads")
 ASSETS_FOLDER = os.path.join(BASE_DIR, "assets")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "bmp", "jfif"}
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(ASSETS_FOLDER, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+except Exception:
+    pass
 
 app = Flask(
     __name__,
@@ -84,13 +86,22 @@ def serve_assets(filename):
 
 @app.route("/uploads/<path:filename>")
 def serve_uploads(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 @app.route("/api/sample/<animal>")
 def get_sample_image(animal):
-    """Serve a sample image from the existing dataset for instant demonstration."""
-    folder = os.path.join(BASE_DIR, "animal_datasets", animal.lower().strip())
+    """Serve a sample image from assets/samples or datasets for instant demonstration."""
+    animal_clean = animal.lower().strip()
+
+    # 1. Try curated fast assets/samples first (ideal for Vercel)
+    sample_file = os.path.join(ASSETS_FOLDER, "samples", f"{animal_clean}.jpg")
+    if os.path.exists(sample_file):
+        print(f"[USER ACTION] Loaded demo sample photo for '{animal.capitalize()}'")
+        return send_from_directory(os.path.join(ASSETS_FOLDER, "samples"), f"{animal_clean}.jpg")
+
+    # 2. Fallback to animal_datasets if available locally
+    folder = os.path.join(BASE_DIR, "animal_datasets", animal_clean)
     if os.path.exists(folder):
         images = [f for f in os.listdir(folder) if allowed_file(f)]
         if images:

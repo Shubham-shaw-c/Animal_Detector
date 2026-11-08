@@ -1,7 +1,5 @@
-tensorflow
-numpy
-matplotlib
-Pillow
-bing-image-downloader
-flask
-flask-cors
+Flask>=3.0.0
+Flask-Cors>=4.0.0
+Pillow>=10.0.0
+numpy>=1.24.0
+ai-edge-litert>=1.0.0

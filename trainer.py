@@ -12,15 +12,29 @@ if "MPLCONFIGDIR" not in os.environ:
     os.environ["MPLCONFIGDIR"] = os.path.join(tempfile.gettempdir(), "mpl_cache")
 import threading
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+try:
+    import matplotlib
+    matplotlib.use("Agg")  # Non-interactive backend
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    matplotlib = None
+    plt = None
+    MATPLOTLIB_AVAILABLE = False
+
+try:
+    import tensorflow as tf
+    from tensorflow.keras.applications import MobileNetV2
+    from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+    from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.preprocessing.image import ImageDataGenerator
+    TF_AVAILABLE = True
+except ImportError:
+    tf = None
+    Callback = object
+    TF_AVAILABLE = False
 
 from model_manager import model_manager
 
@@ -354,6 +368,13 @@ def execute_training_pipeline(new_animal_name: str = None, epochs: int = DEFAULT
 def start_retraining(new_animal_name: str = None, epochs: int = DEFAULT_EPOCHS) -> tuple[bool, str]:
     """Starts the retraining process in a separate background thread."""
     global _trainer_lock
+    if not TF_AVAILABLE:
+        with global_training_state.lock:
+            global_training_state.status = "error"
+            global_training_state.error = "Retraining requires a full local TensorFlow environment and is disabled in serverless deployment."
+            global_training_state.message = "Retraining unavailable in cloud serverless mode."
+        return False, "Retraining is disabled in serverless deployment. Please train locally and deploy the updated model."
+
     if global_training_state.status in ["preparing", "training", "validating_model"]:
         return False, "A model retraining process is currently in progress."
 

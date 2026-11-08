@@ -64,8 +64,9 @@ Animal_Detector_App/
 │   ├── wolf/
 │   └── zebra/
 │
-├── models/                     # Saved Keras models and training telemetry
-│   ├── best_animal_model.keras # Primary production model
+├── models/                     # Saved models and training telemetry
+│   ├── best_animal_model.tflite # High-performance LiteRT model (9.8 MB) for production & Vercel
+│   ├── best_animal_model.keras # Primary Keras model
 │   ├── animal_detector_model.keras
 │   ├── accuracy.png            # Retraining accuracy history curve
 │   └── loss.png                # Retraining loss history curve
@@ -79,6 +80,14 @@ Animal_Detector_App/
 ├── templates/
 │   └── index.html              # Main dashboard view
 │
+├── api/                        # Vercel serverless functions
+│   └── index.py                # Serverless entrypoint
+│
+├── assets/                     # App media & sample images
+│   ├── img/
+│   │   └── background.png
+│   └── samples/                # Fast demo sample photos for all 15 animals
+│
 ├── uploads/                    # Temporary staging directory for uploads
 ├── app.py                      # Flask backend API & web server
 ├── animal_knowledge.py         # Zoological facts database & conversational Q&A
@@ -86,6 +95,8 @@ Animal_Detector_App/
 ├── model_manager.py            # Singleton model loader, inference & hot-reload
 ├── trainer.py                  # Background retraining thread & telemetry
 ├── class_labels.json           # Active class indices synchronized with model
+├── vercel.json                 # Vercel deployment & routing configuration
+├── .vercelignore               # Excludes raw datasets & heavy dependencies
 ├── requirements.txt            # Python dependencies
 └── run.bat                     # Windows launch script
 ```
@@ -154,8 +165,9 @@ http://127.0.0.1:5000
 
 ---
 
-## 🧠 Supported Animal Classes (14)
+## 🧠 Supported Animal Classes (15)
 
+- 🐻 **Bear**
 - 🐱 **Cat**
 - 🐮 **Cow**
 - 🦌 **Deer**
