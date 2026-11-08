@@ -1,0 +1,17 @@
+{
+    "bear": 0,
+    "cat": 1,
+    "cow": 2,
+    "deer": 3,
+    "dog": 4,
+    "elephant": 5,
+    "giraffe": 6,
+    "hippopotamus": 7,
+    "horse": 8,
+    "lion": 9,
+    "panda": 10,
+    "penguin": 11,
+    "tiger": 12,
+    "wolf": 13,
+    "zebra": 14
+}

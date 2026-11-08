@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal AI — Intelligent Animal Detection & Scientific Knowledge Hub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <div class="dashboard-bg-cover" id="dashboardBgCover"></div>
+
+    <!-- Main App Container -->
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo-wrapper">
+                    <div class="brand-logo-icon">
+                        <i class="fa-solid fa-paw"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1 class="brand-title">Animal <span class="gradient-text">Detector</span></h1>
+                        <span class="brand-subtitle">Visual Intelligence & Zoology</span>
+                    </div>
+                </div>
+
+                <div class="model-status-badge" id="modelStatusBadge">
+                    <span class="status-dot pulsing"></span>
+                    <span class="status-label">Model Online</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="classes-count-badge" id="classesCountBadge" title="Click to view supported animals">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span id="classesCountText">13 Supported Species</span>
+                    <i class="fa-solid fa-chevron-down pill-arrow"></i>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="btn btn-outline" id="clearChatBtn" title="Clear current conversation">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Clear Chat</span>
+                </button>
+                <button class="btn btn-primary glow-btn" id="openAddModalBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add New Animal</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Species Drawer / Dropdown Preview -->
+        <div class="species-popover" id="speciesPopover">
+            <div class="species-popover-header">
+                <h4><i class="fa-solid fa-dna"></i> Supported Animal Classes</h4>
+                <button class="close-popover-btn" id="closeSpeciesPopover"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="species-tags-grid" id="speciesTagsGrid">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Central Dashboard Area -->
+        <main class="dashboard-main">
+            <!-- Chatbot Container (with transparent background requirement strictly applied) -->
+            <div class="chatbot-container" id="chatbotContainer">
+                <!-- Chatbot Header -->
+                <div class="chatbot-header">
+                    <div class="chat-assistant-info">
+                        <div class="assistant-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="assistant-meta">
+                            <h3>Animal AI Assistant</h3>
+                            <p class="status-online"><i class="fa-solid fa-circle"></i> Ready for analysis</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-header-actions">
+                        <button class="icon-action-btn" id="resetChatHeaderBtn" title="Start fresh session">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Scroll Area -->
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome AI Message Card -->
+                    <div class="message-row ai-row">
+                        <div class="message-avatar ai-avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="message-bubble ai-bubble welcome-card">
+                            <div class="welcome-badge">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Deep Learning Zoo Assistant
+                            </div>
+                            <h2>Welcome to Animal AI</h2>
+                            <p class="welcome-intro">
+                                Upload or drag & drop any animal photograph. Our AI will classify the species with high precision and present <strong>10 verified scientific facts</strong> covering its taxonomy, habitat, diet, lifespan, and conservation status.
+                            </p>
+
+                            <div class="quick-samples-bar" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(52, 211, 153, 0.25);">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #a7f3d0; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-flask"></i> Quick Demo Test:
+                                </span>
+                                <button class="sample-test-chip" data-animal="tiger">🐯 Tiger</button>
+                                <button class="sample-test-chip" data-animal="elephant">🐘 Elephant</button>
+                                <button class="sample-test-chip" data-animal="panda">🐼 Panda</button>
+                                <button class="sample-test-chip" data-animal="penguin">🐧 Penguin</button>
+                                <button class="sample-test-chip" data-animal="zebra">🦓 Zebra</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Controls Bar -->
+                <div class="chatbot-input-bar">
+                    <!-- Drop Zone Overlay inside chatbot for drag-over effect -->
+                    <div class="drag-drop-overlay" id="dragDropOverlay">
+                        <i class="fa-solid fa-cloud-arrow-up drag-icon"></i>
+                        <h3>Drop your animal photo here</h3>
+                        <p>Supports JPG, PNG, WEBP, BMP</p>
+                    </div>
+
+                    <!-- Hidden file input -->
+                    <input type="file" id="fileInput" accept="image/*" class="visually-hidden">
+
+                    <button class="upload-trigger-btn" id="uploadTriggerBtn" type="button" title="Select an animal photo">
+                        <i class="fa-solid fa-image"></i>
+                        <span>Upload Image</span>
+                    </button>
+
+                    <div class="chat-input-wrapper">
+                        <input type="text" id="chatTextInput" placeholder="Ask a question about the detected animal (e.g. What does it eat?)..." autocomplete="off">
+                    </div>
+
+                    <button class="send-message-btn" id="sendMessageBtn" type="button" title="Send message">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADD NEW ANIMAL MODAL -->
+    <div class="modal-backdrop hidden" id="addAnimalModal">
+        <div class="modal-card">
+                <h4 style="text-align: center; color: rgb(11, 139, 85);">Help to train my model</h4>
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon"><i class="fa-solid fa-plus-circle"></i></div>
+                    <div>
+                        <h3>Add New Animal</h3>
+                        <p>Expand the AI classifier with an autonomous 5-step learning workflow</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeAddModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Step 0: Input Form -->
+                <div class="modal-form-view" id="modalFormView">
+                    <div class="info-alert">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Autonomous Machine Learning Pipeline</strong>
+                            <p>Enter an animal name (e.g. <em>Fox</em>, <em>Koala</em>, <em>Leopard</em>). The system downloads ~100 high-resolution images, verifies them with PIL, augments the dataset, retrains the deep neural network using 80/20 train/val split, and hot-deploys without server restart.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newAnimalInput">Animal Species Name</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-paw input-lead-icon"></i>
+                            <input type="text" id="newAnimalInput" placeholder="e.g. Fox, Kangaroo, Bear" autofocus>
+                        </div>
+                        <span class="input-hint">Use standard English animal names without special characters.</span>
+                    </div>
+
+                    <div class="quick-examples">
+                        <span>Suggested examples:</span>
+                        <button class="example-chip" data-name="Fox">🦊 Fox</button>
+                        <button class="example-chip" data-name="Bear">🐻 Bear</button>
+                        <button class="example-chip" data-name="Rabbit">🐰 Rabbit</button>
+                        <button class="example-chip" data-name="Leopard">🐆 Leopard</button>
+                        <button class="example-chip" data-name="Monkey">🐒 Monkey</button>
+                    </div>
+
+                    <div class="modal-footer-actions">
+                        <button class="btn btn-secondary" id="cancelAddBtn">Cancel</button>
+                        <button class="btn btn-primary glow-btn" id="submitAddAnimalBtn">
+                            <i class="fa-solid fa-rocket"></i>
+                            <span>Start Learning Pipeline</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 1-5: Live Pipeline Progress View -->
+                <div class="modal-progress-view hidden" id="modalProgressView">
+                    <!-- Progress Stepper -->
+                    <div class="pipeline-stepper">
+                        <div class="step-item" id="step1">
+                            <div class="step-circle"><i class="fa-solid fa-check"></i></div>
+                            <div class="step-label">1. Validation</div>
+                        </div>
+                        <div class="step-connector" id="conn1"></div>
+                        <div class="step-item" id="step2">
+                            <div class="step-circle"><i class="fa-solid fa-download"></i></div>
+                            <div class="step-label">2. Gathering (~100)</div>
+                        </div>
+                        <div class="step-connector" id="conn2"></div>
+                        <div class="step-item" id="step3">
+                            <div class="step-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="step-label">3. PIL Verification</div>
+                        </div>
+                        <div class="step-connector" id="conn3"></div>
+                        <div class="step-item" id="step4">
+                            <div class="step-circle"><i class="fa-solid fa-brain"></i></div>
+                            <div class="step-label">4. Retraining</div>
+                        </div>
+                        <div class="step-connector" id="conn4"></div>
+                        <div class="step-item" id="step5">
+                            <div class="step-circle"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="step-label">5. Deployment</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar & Status Text -->
+                    <div class="progress-box">
+                        <div class="progress-info-row">
+                            <span class="progress-status-msg" id="pipelineStatusMsg">Starting pipeline...</span>
+                            <span class="progress-percent-val" id="pipelinePercentVal">0%</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill" id="pipelineProgressBar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time Metrics Card Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-title">Target Species</span>
+                            <span class="metric-value highlight" id="metricAnimalName">-</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Images Collected</span>
+                            <span class="metric-value" id="metricImagesCount">0 / 100</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Training Accuracy</span>
+                            <span class="metric-value" id="metricTrainAcc">--</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Validation Accuracy</span>
+                            <span class="metric-value" id="metricValAcc">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Log Terminal -->
+                    <div class="pipeline-log-terminal" id="pipelineLogTerminal">
+                        <div class="log-line text-muted">[System] Pipeline initiated...</div>
+                    </div>
+
+                    <!-- Success Confirmation Banner (revealed on complete) -->
+                    <div class="success-confirmation-banner hidden" id="successConfirmationBanner">
+                        <div class="conf-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="conf-content">
+                            <h4>New Animal Added Successfully!</h4>
+                            <p id="confDetailsText">The AI model has learned the new species with zero downtime.</p>
+                        </div>
+                        <button class="btn btn-primary" id="finishPipelineBtn">
+                            <i class="fa-solid fa-arrow-right"></i>
+                            <span>Return to Chatbot</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
+

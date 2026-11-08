@@ -1,0 +1,7 @@
+tensorflow
+numpy
+matplotlib
+Pillow
+bing-image-downloader
+flask
+flask-cors

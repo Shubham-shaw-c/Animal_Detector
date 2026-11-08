@@ -1,0 +1,9 @@
+.refact/
+.qodo/
+__pycache__/
+*.pyc
+.venv/
+venv/
+uploads/*
+!uploads/.gitkeep
+models/temp_training_model.keras
