@@ -16,6 +16,8 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 
+from animal_validator import validate_new_animal
+
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -75,33 +77,11 @@ def get_current_download_status():
 
 def validate_animal_name(name: str, existing_classes: list = None) -> tuple[bool, str, str]:
     """
-    Validates animal name against path traversal, empty input, and duplicates.
+    Validates animal name against zoological dictionary, path traversal, empty input, and duplicates.
     Returns: (is_valid, normalized_name, error_message)
     """
-    if not name or not isinstance(name, str):
-        return False, "", "Animal name cannot be empty."
-
-    trimmed = name.strip()
-    if len(trimmed) < 2 or len(trimmed) > 30:
-        return False, "", "Animal name must be between 2 and 30 characters long."
-
-    # Allow only letters, numbers, spaces, and hyphens
-    if not re.match(r"^[a-zA-Z0-9\s-]+$", trimmed):
-        return False, "", "Animal name contains invalid characters. Use letters only."
-
-    normalized = re.sub(r"\s+", "_", trimmed.lower()).strip("_")
-    
-    # Path traversal check
-    if ".." in normalized or "/" in normalized or "\\" in normalized:
-        return False, "", "Invalid characters detected."
-
-    # Duplicate check
-    if existing_classes:
-        lower_existing = [c.lower() for c in existing_classes]
-        if normalized in lower_existing or trimmed.lower() in lower_existing:
-            return False, normalized, f"Animal '{trimmed}' already exists in the dataset."
-
-    return True, normalized, ""
+    is_valid, normalized, display_name, error_msg = validate_new_animal(name, existing_classes)
+    return is_valid, normalized, error_msg
 
 
 def fetch_bing_image_urls(query: str, max_links: int = 150) -> list[str]:
@@ -180,10 +160,19 @@ def download_and_verify_single(url: str, headers: dict) -> tuple[bool, Image.Ima
 
 def run_download_pipeline(task: ImageDownloadTask):
     """Executes the multi-threaded image gathering & validation pipeline."""
+    # 0. Strict Zoological Animal Name Verification Guard
+    is_valid, _, display_name, err = validate_new_animal(task.animal_name)
+    if not is_valid:
+        task.status = "failed"
+        task.error = err or f"'{task.animal_name}' is not recognized as a valid animal species."
+        task.message = f"Process aborted: {task.error}"
+        print(f"[DOWNLOAD ABORTED] Refusing to create folder or download images: {task.message}")
+        return
+
     task.status = "downloading"
     task.message = f"Creating dataset folder for {task.animal_name}..."
 
-    # 1. Setup folder
+    # 1. Setup folder ONLY after successful animal validation
     folder = os.path.join(DATASET_ROOT, task.animal_name)
     os.makedirs(folder, exist_ok=True)
     task.folder_path = folder

@@ -37,6 +37,7 @@ except ImportError:
     TF_AVAILABLE = False
 
 from model_manager import model_manager
+from animal_validator import validate_new_animal
 
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 32
@@ -138,6 +139,19 @@ class EpochProgressCallback(Callback):
 def execute_training_pipeline(new_animal_name: str = None, epochs: int = DEFAULT_EPOCHS):
     """Executes the full training, validation, checkpointing, and safe deployment pipeline."""
     state = global_training_state
+
+    # 0. Strict Zoological Animal Verification Guard
+    if new_animal_name:
+        is_valid, _, display_name, err = validate_new_animal(new_animal_name)
+        if not is_valid:
+            state.update(
+                status="error",
+                error=err or f"'{new_animal_name}' is not recognized as a valid animal species.",
+                message=f"Retraining aborted: '{new_animal_name}' is not an animal."
+            )
+            print(f"[TRAINER ABORTED] Refusing to retrain model on non-animal '{new_animal_name}'")
+            return
+
     try:
         os.makedirs(MODELS_DIR, exist_ok=True)
         state.update(

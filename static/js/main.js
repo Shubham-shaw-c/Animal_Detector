@@ -559,22 +559,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const rawName = newAnimalInput.value.trim();
         if (!rawName) {
             showToast("Please enter an animal name.", "error");
+            newAnimalInput.focus();
+            newAnimalInput.classList.add("input-error");
+            setTimeout(() => newAnimalInput.classList.remove("input-error"), 1500);
             return;
         }
 
-        // Switch to progress view
-        modalFormView.classList.add("hidden");
-        modalProgressView.classList.remove("hidden");
-        metricAnimalName.textContent = rawName;
-        logToTerminal(`[System] Initializing autonomous learning pipeline for "${rawName}"...`, "text-info");
+        const originalBtnHTML = submitAddAnimalBtn.innerHTML;
+        submitAddAnimalBtn.disabled = true;
+        submitAddAnimalBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying Animal...</span>';
 
-        // Step 1: Active
-        setStepState(step1, "active");
-        pipelineStatusMsg.textContent = `Validating "${rawName}" and creating dataset directory...`;
-        pipelineProgressBar.style.width = "10%";
-        pipelinePercentVal.textContent = "10%";
-
-        // Call /api/add-animal
+        // Call /api/add-animal to strictly validate the animal species before proceeding
         fetch("/api/add-animal", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -582,26 +577,45 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(res => res.json())
             .then(data => {
+                submitAddAnimalBtn.disabled = false;
+                submitAddAnimalBtn.innerHTML = originalBtnHTML;
+
                 if (!data.success) {
-                    logToTerminal(`[Error] ${data.error}`, "text-error");
-                    pipelineStatusMsg.textContent = `Failed: ${data.error}`;
+                    // STOP IMMEDIATELY: Do not switch views, do not download, do not create folders
                     showToast(data.error, "error");
+                    newAnimalInput.focus();
+                    newAnimalInput.classList.add("input-error");
+                    setTimeout(() => newAnimalInput.classList.remove("input-error"), 2500);
                     return;
                 }
 
-                // Step 1 complete, Step 2 active
+                // ONLY VALID ANIMALS PROCEED HERE:
+                // Switch to progress view
+                modalFormView.classList.add("hidden");
+                modalProgressView.classList.remove("hidden");
+                metricAnimalName.textContent = data.display_name || rawName;
+
+                logToTerminal(`[System] Genuine animal species "${data.display_name}" verified!`, "text-success");
+                logToTerminal(`[System] Initializing autonomous learning pipeline...`, "text-info");
+
+                // Step 1: Complete, Step 2: Active
                 setStepState(step1, "completed");
                 setStepConnector(conn1, true);
                 setStepState(step2, "active");
-                logToTerminal(`[Validation] Animal name "${data.animal}" verified. Dataset directory ready.`, "text-success");
-                logToTerminal(`[Download] Gathering ~100 candidate images from Bing image repository...`, "text-info");
+
+                pipelineStatusMsg.textContent = `Gathering candidate images for "${data.display_name}"...`;
+                pipelineProgressBar.style.width = "15%";
+                pipelinePercentVal.textContent = "15%";
+
+                logToTerminal(`[Download] Scraping high-resolution photos for ${data.display_name}...`, "text-info");
 
                 // Start Polling Download Progress
                 startDownloadPolling(data.animal);
             })
             .catch(err => {
-                logToTerminal(`[Error] Network error: ${err.message}`, "text-error");
-                pipelineStatusMsg.textContent = "Network request failed.";
+                submitAddAnimalBtn.disabled = false;
+                submitAddAnimalBtn.innerHTML = originalBtnHTML;
+                showToast(`Request failed: ${err.message}`, "error");
             });
     });
 

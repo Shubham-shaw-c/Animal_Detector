@@ -37,6 +37,7 @@ from flask_cors import CORS
 from PIL import Image
 
 from animal_knowledge import answer_animal_question, get_animal_facts
+from animal_validator import validate_new_animal
 from image_downloader import (
     get_current_download_status,
     start_image_download,
@@ -200,12 +201,13 @@ def add_animal():
     limit = int(data.get("limit", 100))
 
     existing_classes = model_manager.get_supported_classes()["raw_classes"]
-    is_valid, normalized_name, error_msg = validate_animal_name(raw_name, existing_classes)
+    is_valid, normalized_name, display_name, error_msg = validate_new_animal(raw_name, existing_classes)
 
     if not is_valid:
+        print(f"[VALIDATION BLOCKED] Rejected non-animal '{raw_name}': {error_msg}")
         return jsonify({"success": False, "error": error_msg}), 400
 
-    print(f"[NEW ANIMAL] User requested to add animal class: '{raw_name.capitalize()}'")
+    print(f"[NEW ANIMAL] Verified genuine animal species: '{display_name}' ({normalized_name}). Initiating image collection...")
     success, msg = start_image_download(normalized_name, target_count=limit)
     if not success:
         return jsonify({"success": False, "error": msg}), 409
@@ -213,7 +215,7 @@ def add_animal():
     return jsonify({
         "success": True,
         "animal": normalized_name,
-        "display_name": raw_name.capitalize(),
+        "display_name": display_name,
         "message": msg
     })
 
@@ -231,6 +233,12 @@ def train():
     data = request.get_json(silent=True) or {}
     new_animal = data.get("animal", "").strip()
     epochs = int(data.get("epochs", 10))
+
+    if new_animal:
+        is_valid, _, display_name, error_msg = validate_new_animal(new_animal)
+        if not is_valid:
+            print(f"[TRAINER BLOCKED] Refusing to train on invalid animal '{new_animal}': {error_msg}")
+            return jsonify({"success": False, "error": error_msg}), 400
 
     print(f"[TRAINER] User triggered retraining for: '{new_animal.capitalize() if new_animal else 'Complete Dataset'}'")
     success, msg = start_retraining(new_animal_name=new_animal or None, epochs=epochs)
