@@ -85,12 +85,36 @@ try:
 except Exception as e:
     print(f"[WhiteNoise Note] Static middleware init: {e}")
 
+# Vercel WSGI Middleware: Restores the actual requested URL from Vercel rewrite proxy headers
+class VercelPathMiddleware:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        matched = (
+            environ.get("HTTP_X_MATCHED_PATH")
+            or environ.get("HTTP_X_FORWARDED_URI")
+            or environ.get("HTTP_X_ORIGINAL_URL")
+        )
+        if matched:
+            clean_path = matched.split("?")[0]
+            if clean_path and clean_path != "/api/index":
+                environ["PATH_INFO"] = clean_path
+            elif environ.get("PATH_INFO") == "/api/index":
+                environ["PATH_INFO"] = "/"
+        elif environ.get("PATH_INFO") == "/api/index":
+            environ["PATH_INFO"] = "/"
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathMiddleware(app.wsgi_app)
+
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/")
+@app.route("/api/index")
 def index():
     print(f"[USER ACTION] Connected to Animal AI Dashboard from {request.remote_addr}")
     return render_template("index.html")
