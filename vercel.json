@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "routes": [
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{static/**,public/**,assets/**,templates/**,models/best_animal_model.tflite,class_labels.json}"
+    }
+  },
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.py"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }

@@ -69,6 +69,22 @@ CORS(app)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32 MB max upload limit
 
+# Integrate WhiteNoise WSGI middleware for robust static asset delivery on Vercel
+try:
+    from whitenoise import WhiteNoise
+    public_path = os.path.join(BASE_DIR, "public")
+    app.wsgi_app = WhiteNoise(app.wsgi_app, root=public_path if os.path.exists(public_path) else None)
+
+    static_path = os.path.join(BASE_DIR, "static")
+    if os.path.exists(static_path):
+        app.wsgi_app.add_files(static_path, prefix="static/")
+
+    assets_path = os.path.join(BASE_DIR, "assets")
+    if os.path.exists(assets_path):
+        app.wsgi_app.add_files(assets_path, prefix="assets/")
+except Exception as e:
+    print(f"[WhiteNoise Note] Static middleware init: {e}")
+
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
