@@ -2,7 +2,14 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "{static/**,public/**,assets/**,templates/**,models/best_animal_model.tflite,class_labels.json}"
+      "includeFiles": [
+        "static/**",
+        "public/**",
+        "assets/**",
+        "templates/**",
+        "models/best_animal_model.tflite",
+        "class_labels.json"
+      ]
     }
   },
   "rewrites": [
