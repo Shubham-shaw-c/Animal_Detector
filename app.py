@@ -80,9 +80,27 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    for folder in [
+        os.path.join(BASE_DIR, "public", "static"),
+        os.path.join(BASE_DIR, "static"),
+        os.path.join(BASE_DIR, "public")
+    ]:
+        if os.path.exists(os.path.join(folder, filename)):
+            return send_from_directory(folder, filename)
+    return jsonify({"error": "Static file not found"}), 404
+
+
 @app.route("/assets/<path:filename>")
 def serve_assets(filename):
-    return send_from_directory(ASSETS_FOLDER, filename)
+    for folder in [
+        os.path.join(BASE_DIR, "public", "assets"),
+        os.path.join(BASE_DIR, "assets")
+    ]:
+        if os.path.exists(os.path.join(folder, filename)):
+            return send_from_directory(folder, filename)
+    return jsonify({"error": "Asset not found"}), 404
 
 
 @app.route("/uploads/<path:filename>")
